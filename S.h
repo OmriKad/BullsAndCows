@@ -18,6 +18,6 @@ public:
     S();
     void UpdateCost(int guess, Feedback fb);
     int GetNextGuess();
-    int size() const { return S_group.size(); }
+    size_t size() const { return S_group.size(); }
 };
 #endif //ALGO_S_H

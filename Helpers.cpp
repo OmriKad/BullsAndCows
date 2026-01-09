@@ -84,7 +84,7 @@ Feedback Helpers::getFeedback(int guess, int secret)
         else
         {
             // Find if g_digit exists in secretStr
-            const int g_pos = secretStr.find(guessStr[i]);
+            const size_t g_pos = secretStr.find(guessStr[i]);
             if (g_pos != string::npos)
             {
                 result.cows++;

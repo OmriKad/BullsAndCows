@@ -24,7 +24,7 @@ bool Questions::question_1(int newGuess, Feedback* feedbacks, int* guesses, int 
 
 void Questions::question_2()
 {
-    srand(time(0));
+    srand(static_cast<unsigned int>(time(0)));
     std::vector<int> roundsGuesses; // Store results for statistics
 
     for (int i = 0; i < Settings::numOfRounds; i++)
