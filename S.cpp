@@ -4,8 +4,9 @@
 #include <unordered_map>
 #include <algorithm>
 #include <iostream>
+#include <cmath>
 
-S::S() {
+S::S(bool useExpectedValueStrategy) : currentAttempt(0), useExpectedValue(useExpectedValueStrategy) {
     S_group.clear();
     int maxNumber = 1;
     for (int i = 0; i < Settings::N; ++i)
@@ -43,18 +44,10 @@ S::S() {
     }
 
     // Precompute costs for all initial guesses
-    computeCosts();
-
-    // Debug: Show top 10 initial guesses (only first time)
-    static bool firstTime = true;
-    if (firstTime) {
-        firstTime = false;
-        std::cout << "\n=== Top 10 Min-Max Initial Guesses ===" << std::endl;
-        for (int i = 0; i < std::min(10, (int)costs.size()); ++i) {
-            std::cout << "  " << (i+1) << ". Guess: " << costs[i].guess
-                      << " - Worst-case: " << costs[i].maxBucketSize << std::endl;
-        }
-        std::cout << "  (All have equal worst-case - 1234 wins tie-break)\n" << std::endl;
+    if (useExpectedValue) {
+        computeCostsExpected();
+    } else {
+        computeCosts();
     }
 }
 
@@ -80,13 +73,59 @@ void S::computeCosts() {
             }
         }
 
-        costs.push_back({guess, maxBucket});
+        costs.push_back({guess, maxBucket, 0.0});
     }
 
     // Sort by maxBucketSize, then by guess value (for tie-breaking)
     std::sort(costs.begin(), costs.end(), [](const GuessCost& a, const GuessCost& b) {
         if (a.maxBucketSize != b.maxBucketSize)
             return a.maxBucketSize < b.maxBucketSize;
+        return a.guess < b.guess;
+    });
+}
+
+void S::computeCostsExpected() {
+    costs.clear();
+    costs.reserve(S_group.size());
+
+    for (int guess : S_group) {
+        std::unordered_map<int, int> bucketSizes; // key = bulls*10 + cows
+
+        // For this guess, compute feedback distribution across all candidates
+        for (int secret : S_group) {
+            Feedback fb = Helpers::getFeedback(guess, secret);
+            int key = fb.bulls * 10 + fb.cows;
+            bucketSizes[key]++;
+        }
+
+        // Calculate expected value cost
+        double expectedCost = 0.0;
+        int maxBucket = 0;
+
+        for (const auto& pair : bucketSizes) {
+            double probability = static_cast<double>(pair.second) / S_group.size();
+            double bucketCost = pair.second;
+
+            // Apply the cost formula based on S size and current attempt
+            // cost(x,y) ~ t/100 * |S|
+            if (S_group.size() > 100) {
+                bucketCost = bucketCost * currentAttempt / 100.0;
+            }
+
+            expectedCost += probability * bucketCost;
+
+            if (pair.second > maxBucket) {
+                maxBucket = pair.second;
+            }
+        }
+
+        costs.push_back({guess, maxBucket, expectedCost});
+    }
+
+    // Sort by expectedCost, then by guess value (for tie-breaking)
+    std::sort(costs.begin(), costs.end(), [](const GuessCost& a, const GuessCost& b) {
+        if (std::abs(a.expectedCost - b.expectedCost) > 1e-9)
+            return a.expectedCost < b.expectedCost;
         return a.guess < b.guess;
     });
 }
@@ -102,8 +141,15 @@ void S::UpdateCost(int guess, Feedback fb) {
     }
     S_group.swap(filtered);
 
+    // Increment attempt counter for expected value strategy
+    currentAttempt++;
+
     // Recompute costs for the narrowed candidate set
-    computeCosts();
+    if (useExpectedValue) {
+        computeCostsExpected();
+    } else {
+        computeCosts();
+    }
 }
 
 int S::GetNextGuess() {

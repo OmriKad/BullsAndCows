@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <unordered_map>
 
 
 bool Questions::question_1(int newGuess, Feedback* feedbacks, int* guesses, int n)
@@ -90,6 +91,7 @@ void Questions::question_2()
 
 void Questions::question_3()
 {
+    srand(static_cast<unsigned int>(time(0)));
     std::vector<int> roundsGuesses; // Store results for statistics
 
     for (int i = 0; i < Settings::numOfRounds; i++)
@@ -131,6 +133,53 @@ void Questions::question_3()
     Stats stats = Helpers::calculateStatistics(roundsGuesses);
 
     std::cout << "\n=== Min-Max Algorithm Statistics ===" << std::endl;
+    std::cout << "Average: " << stats.average << std::endl;
+    std::cout << "Median: " << stats.median << std::endl;
+    std::cout << "Max: " << stats.max << std::endl;
+}
+
+void Questions::question_4() {
+    std::vector<int> roundsGuesses; // Store results for statistics
+
+    for (int i = 0; i < Settings::numOfRounds; i++)
+    {
+        int secret = Helpers::generateSecret();
+        int attempts = 0;
+        bool solved = false;
+        S state(true); // Initialize with expected value strategy (true parameter)
+
+        std::cout << "Round " << (i + 1) << " - Secret: " << secret << std::endl;
+
+        while (!solved && state.size() > 0)
+        {
+            attempts++;
+
+            // Get the expected-value optimal guess
+            int guess = state.GetNextGuess();
+
+            // Get feedback from the secret
+            Feedback fb = Helpers::getFeedback(guess, secret);
+
+            std::cout << "  Guess " << attempts << ": " << guess
+                      << " (B: " << fb.bulls << ", C: " << fb.cows
+                      << ") - Remaining: " << state.size() << std::endl;
+
+            if (fb.bulls == Settings::N) {
+                solved = true;
+            } else {
+                // Filter candidates based on feedback
+                state.UpdateCost(guess, fb);
+            }
+        }
+
+        roundsGuesses.push_back(attempts);
+        std::cout << "  Solved in " << attempts << " attempts\n" << std::endl;
+    }
+
+    // --- Statistics ---
+    Stats stats = Helpers::calculateStatistics(roundsGuesses);
+
+    std::cout << "\n=== Expected Value Algorithm Statistics ===" << std::endl;
     std::cout << "Average: " << stats.average << std::endl;
     std::cout << "Median: " << stats.median << std::endl;
     std::cout << "Max: " << stats.max << std::endl;
