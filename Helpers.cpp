@@ -104,9 +104,6 @@ bool Helpers::dfsFindGuess(int currentVal, int length, bool usedDigits[],
     // Base case: Full number generated
     if (length == Settings::N)
     {
-        // Double check using the robust question_1 check (optional but recommended safety)
-        // Convert vectors to arrays for question_1 API
-        // Note: Using const_cast or creating temp arrays because API expects int*
         std::vector<int> h_guesses = historyGuesses;
         std::vector<Feedback> h_feedbacks = historyFeedbacks;
 

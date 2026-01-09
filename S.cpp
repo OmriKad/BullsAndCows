@@ -3,7 +3,6 @@
 #include <string>
 #include <unordered_map>
 #include <algorithm>
-#include <iostream>
 #include <cmath>
 
 S::S(bool useExpectedValueStrategy) : currentAttempt(0), useExpectedValue(useExpectedValueStrategy) {

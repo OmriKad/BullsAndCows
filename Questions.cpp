@@ -5,7 +5,6 @@
 #include <vector>
 #include <iostream>
 #include <string>
-#include <unordered_map>
 
 
 bool Questions::question_1(int newGuess, Feedback* feedbacks, int* guesses, int n)
@@ -139,6 +138,7 @@ void Questions::question_3()
 }
 
 void Questions::question_4() {
+    srand(static_cast<unsigned int>(time(0)));
     std::vector<int> roundsGuesses; // Store results for statistics
 
     for (int i = 0; i < Settings::numOfRounds; i++)
