@@ -1,0 +1,11 @@
+name: MSVC Build Check
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+      - name: Compile Code
+        run: cl.exe /EHsc *.cpp  # This compiles all .cpp files using MSVC
